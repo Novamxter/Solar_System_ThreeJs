@@ -1,47 +1,75 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-//import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
+// Scene setup
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000); // space background
+scene.background = new THREE.Color(0x000000);
 
+// Camera
 const camera = new THREE.PerspectiveCamera(
   45, window.innerWidth / window.innerHeight, 0.1, 1000
 );
 camera.position.set(0, 5, 20);
 
+// Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Add lights
-const light = new THREE.PointLight(0xffffff, 1.2);
-light.position.set(10, 10, 10);
-scene.add(light);
+// ✅ Add Ambient Light (base light)
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Increased intensity
+scene.add(ambientLight);
 
-// Create Saturn
-const saturnTexture = new THREE.TextureLoader().load('../textures/saturn.jpg');
+// ✅ Add Strong Point Light
+const pointLight = new THREE.PointLight(0xffffff, 3); // Increased intensity
+pointLight.position.set(10, 10, 10);
+scene.add(pointLight);
+
+// Controls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.update();
+
+// Saturn planet
 const saturnGeo = new THREE.SphereGeometry(3, 64, 64);
-const saturnMat = new THREE.MeshStandardMaterial({ map: saturnTexture });
+const saturnMat = new THREE.MeshStandardMaterial({
+  color: 0xffffff,      // full color brightness
+  roughness: 0.1,       // less matte for better reflection
+  metalness: 0.5       // increased metallic shine
+}); // Safe base
 const saturn = new THREE.Mesh(saturnGeo, saturnMat);
 scene.add(saturn);
 
-// Create Rings (transparent PNG texture works well)
-const ringTexture = new THREE.TextureLoader().load('../textures/saturn_ring.png');
+// ✅ Load Saturn texture
+new THREE.TextureLoader().load(
+  '../textures/saturn.jpg',
+  (texture) => {
+    saturnMat.map = texture;
+    saturnMat.needsUpdate = true;
+    console.log("✅ Saturn texture applied.");
+  },
+  undefined,
+  (err) => {
+    console.error("❌ Failed to load Saturn texture:", err);
+  }
+);
+
+// Rings with transparent texture
 const ringGeo = new THREE.RingGeometry(3.5, 6, 64);
-const ringMat = new THREE.MeshBasicMaterial({
-  map: ringTexture,
+const ringMat = new THREE.MeshStandardMaterial({
+  map: new THREE.TextureLoader().load('../textures/saturn_ring.png'),
   side: THREE.DoubleSide,
-  transparent: true
+  transparent: true,
+  opacity: 0.8 // Adjust opacity for better visibility
 });
 const rings = new THREE.Mesh(ringGeo, ringMat);
 rings.rotation.x = Math.PI / 2;
 rings.rotation.z = Math.PI / 5;
+rings.position.y = 0.01; // avoid z-fighting
 scene.add(rings);
 
-// Controls for rotation via mouse
-const controls = new OrbitControls(camera, renderer.domElement);
 
-// Responsive canvas
+// Resize handling
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -52,7 +80,6 @@ window.addEventListener('resize', () => {
 function animate() {
   requestAnimationFrame(animate);
 
-  // Rotate Saturn and ring slowly
   saturn.rotation.y += 0.002;
   rings.rotation.z += 0.001;
 
