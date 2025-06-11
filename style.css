@@ -9,15 +9,32 @@ body {
   display: block;
 }
 
-#controls {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(255, 255, 255, 0.1);
+#controls-container {
+  position: fixed;
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.8);
   padding: 10px;
-  border-radius: 8px;
-  z-index: 1;
-  color: #fff;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+#controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+#controls label {
+  color: white;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+  display: block;
+}
+
+#controls input[type="range"] {
+  width: 100%;
 }
 
 #pauseResume {
